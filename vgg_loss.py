@@ -1,12 +1,15 @@
 import torch.nn as nn
 import torch
 import torchvision
-import config
+
+
+# import config
 
 
 class VGG19(nn.Module):
     def __init__(self, requires_grad=False):
         vgg_pretrained_features = torchvision.models.vgg19(pretrained=True).features
+        self.requiers_grad = requires_grad
         self.slice1 = nn.Sequential()
         self.slice2 = nn.Sequential()
         self.slice3 = nn.Sequential()
@@ -23,7 +26,7 @@ class VGG19(nn.Module):
             self.slice4.add_module(str(x), vgg_pretrained_features[x])
         for x in range(21, 30):
             self.slice5.add_module(str(x), vgg_pretrained_features[x])
-        if not requiers_grad:
+        if not self.requiers_grad:
             for param in self.parameters():
                 param.requiers_grad = False
 

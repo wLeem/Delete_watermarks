@@ -1,11 +1,21 @@
 import numpy as np
-import config
+# import config
+import torch
 import os
+import torch.nn.functional as F
 from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 from torchvision.utils import save_image
 from PIL import ImageFile
+
 ImageFile.LOAD_TRUNCATED_IMAGES = True
+from PIL import Image
+import math
+import numpy as np
+import cv2
+# import albumentations as A
+# from tqdm import tqdm
+# from albumentations.pytorch import ToTensorV2
 
 
 class WaterDataset(Dataset):
@@ -17,23 +27,16 @@ class WaterDataset(Dataset):
         return len(self.list_files)
 
     def __getitem__(self, index):
-        img_file = delf.list_files[index]
+        img_file = self.list_files[index]
         img_path = os.path.join(self.root_dir, img_file)
         image = np.array(Image.open(img_path).convert("RGB"))
         split_half = int(image.shape[1] / 2)
         input_image = image[:, :split_half, :]
+        target_image = image[:, :split_half, :]
 
         #         do augmentations if you like here
 
         return input_image, target_image
-
-from PIL import Image
-import math
-import numpy as np
-import cv2
-import albumentations as A
-from tqdm import tqdm
-from albumentations.pytorch import ToTensorV2
 
 
 def split_image_crops(directory, model, kernel_size=256, device='cpu'):
@@ -74,7 +77,7 @@ def split_image_crops(directory, model, kernel_size=256, device='cpu'):
                 patches[from_idx:to_idx] = (patch * 0.5 + 0.5).to("cpu")
 
         patches = patches.view(1, patches.shape[0], 3 * kernel_size * kernel_size).permute(0, 2, 1)
-        output = F.fold(patches, output_size(img_size, img_size), kernel_size=kernel_size, stride=dh)
+        output = F.fold(patches, output_size=(img_size, img_size), kernel_size=kernel_size, stride=dh)
         recovery_mask = F.fold(torch.ones_like(patches), output_size=(img_size, img_size),
                                kernel_size=kernel_size, stride=dh)
         output /= recovery_mask
